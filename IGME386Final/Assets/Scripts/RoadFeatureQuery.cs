@@ -23,7 +23,7 @@ public class RoadFeatureQuery : MonoBehaviour
         "https://services2.arcgis.com/FiaPA4ga0iQKduv3/arcgis/rest/services/Transportation_v1/FeatureServer/7/query";
 
     [Header("Bounding Box (if querying web) - use 4326 or 3857 depending on service")]
-    // Default to NYC
+    // Default to NYC (In unity coords)
     [SerializeField] private double xMin = -8265194.95;
     [SerializeField] private double xMax = -8211773.97;
     [SerializeField] private double yMin = 4934181.47;
