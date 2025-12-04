@@ -225,6 +225,7 @@ GameObject:
   - component: {fileID: 944771102}
   - component: {fileID: 944771101}
   - component: {fileID: 944771100}
+  - component: {fileID: 944771104}
   m_Layer: 0
   m_Name: ArcGISCamera
   m_TagString: MainCamera
@@ -373,6 +374,23 @@ MonoBehaviour:
     x: 1
     y: 1
     z: 1
+--- !u!114 &944771104
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 944771098}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27afbdfc83e47004e95ef7726ed4a9cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaxSpeed: 2000000
+  MinSpeed: 1000
+  IgnoreUI: 0
+  EnableLeftDragging: 1
+  EnableRightDragging: 1
 --- !u!1 &1012773146
 GameObject:
   m_ObjectHideFlags: 0
@@ -382,6 +400,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1012773147}
+  - component: {fileID: 1012773148}
   m_Layer: 0
   m_Name: FeatureLayerQuery
   m_TagString: Untagged
@@ -404,6 +423,29 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1012773148
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1012773146}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e627e9f1252aa0f49adf1e392624928b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mapComponent: {fileID: 2039472874}
+  featureServiceUrl: https://services2.arcgis.com/FiaPA4ga0iQKduv3/arcgis/rest/services/Transportation_v1/FeatureServer/7/query
+  xMin: -8265194.95
+  xMax: -8211773.97
+  yMin: 4934181.47
+  yMax: 4978649.49
+  roadMaterial: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  lineWidth: 1.5
+  heightOffset: 5
+  groupByName: 0
+  lineArray: []
 --- !u!1 &2039472873
 GameObject:
   m_ObjectHideFlags: 0
@@ -445,7 +487,7 @@ MonoBehaviour:
     - Name: Terrain 3D
       Type: 0
       Source: https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer
-      IsEnabled: 1
+      IsEnabled: 0
       Authentication:
         ConfigurationIndex: -1
       AuthenticationType: 1
