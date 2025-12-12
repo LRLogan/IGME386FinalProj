@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public struct Endpoint
+public class Endpoint
 {
-    public Vector2 position;
+    public Vector2 position; // Lat / Long, NOT unity coords
     public string roadName;
     public int vertexIndex;
     public bool merged;
+
+    // Index / ref to graph node if needed
+    public FeatureGridNode backendRef;
 }
 
 public struct CellIndex
@@ -20,26 +23,37 @@ public struct CellIndex
         this.x = x;
         this.y = y;
     }
+
+    // Required for dictionary usage
+    public override bool Equals(object obj)
+    {
+        if (!(obj is CellIndex)) return false;
+
+        CellIndex other = (CellIndex)obj;
+        return x == other.x && y == other.y;
+    }
+
+    public override int GetHashCode()
+    {
+        // good enough hash for spatial grids
+        return (x * 73856093) ^ (y * 19349663);
+    }
 }
 
-public class FeatureGrid : MonoBehaviour
+
+public class FeatureGrid
 {
     // The spatial hash grid itself
     Dictionary<CellIndex, List<Endpoint>> grid;
 
-    float cellSize = 5.0f;             // adjust based on snapping tolerance
-    float snapTolerance = 3.0f;        // endpoints closer than this will be merged
+    float cellSize;         // adjust based on snapping tolerance
+    float snapTolerance;    // endpoints closer than this will be merged
 
-    // Start is called before the first frame update
-    void Start()
+    public FeatureGrid(float cellSize = 5.0f, float snapTolerance = 3.0f)
     {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        this.cellSize = cellSize;
+        this.snapTolerance = snapTolerance;
+        grid = new Dictionary<CellIndex, List<Endpoint>>();
     }
 
     /// <summary>
@@ -61,13 +75,14 @@ public class FeatureGrid : MonoBehaviour
     {
         CellIndex cell = GetCellIndex(ep.position);
 
-        if (!grid.ContainsKey(cell))
+        if (!grid.TryGetValue(cell, out List<Endpoint> bucket))
         {
-            grid[cell] = new List<Endpoint>();
+            bucket = new List<Endpoint>();
+            grid[cell] = bucket;
         }
-        
-        grid[cell].Add(ep);
-    }    
+
+        bucket.Add(ep);
+    }
 
     private List<Endpoint> GetNearbyEndpoints(Vector2 pos)
     {
@@ -81,8 +96,8 @@ public class FeatureGrid : MonoBehaviour
             {
                 CellIndex neighborCell = new CellIndex(baseCell.x + i, baseCell.y + j);
 
-                if (grid.ContainsKey(neighborCell))
-                    results.AddRange(grid[neighborCell]);
+                if (grid.TryGetValue(neighborCell, out List<Endpoint> bucket))
+                    results.AddRange(bucket);
             }
         }
 
@@ -116,14 +131,30 @@ public class FeatureGrid : MonoBehaviour
         }
     }
 
-    public void BuildRoadGraph()
+    public void BuildRoadGraph(List<RoadData> allRoads)
     {
-        grid.Clear();
+        List<Endpoint> allEndpoints = new List<Endpoint>();
 
-        // Get all endpoints from roads
+        // Get all endpoints from roads then insert them
+        foreach (RoadData rd in allRoads)
+        {
+            foreach (FeatureGridNode node in rd.backendNodes)
+            {
+                Endpoint ep = new Endpoint();
+                ep.position = node.latLong;   
+                ep.vertexIndex = node.vertexIndex;
+                ep.roadName = rd.roadName;
+                ep.backendRef = node;
 
-        // Insert all endpoints into grid
+                allEndpoints.Add(ep);
+                InsertEndpoint(ep);
+            }
+        }
 
         // Process them for connections
+        foreach (Endpoint ep in allEndpoints)
+        {
+            ProcessEndpoint(ep);
+        }
     }
 }
