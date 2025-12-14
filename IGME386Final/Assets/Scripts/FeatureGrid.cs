@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class Endpoint
 {
-    public Vector2 position; // Lat / Long, NOT unity coords
+    public Vector2 position; // Meters
     public string roadName;
     public int vertexIndex;
     public bool merged;
@@ -49,7 +49,7 @@ public class FeatureGrid
     float cellSize;         // adjust based on snapping tolerance
     float snapTolerance;    // endpoints closer than this will be merged
 
-    public FeatureGrid(float cellSize = 5.0f, float snapTolerance = 3.0f)
+    public FeatureGrid(float cellSize = 10.0f, float snapTolerance = 3.0f)
     {
         this.cellSize = cellSize;
         this.snapTolerance = snapTolerance;
@@ -59,13 +59,16 @@ public class FeatureGrid
     /// <summary>
     /// Returns the position in the grid given world position
     /// </summary>
-    /// <param name="worldPos">world pos</param>
+    /// <param name="meters">world pos in meters</param>
     /// <returns></returns>
-    private CellIndex GetCellIndex(Vector2 worldPos)
+    private CellIndex GetCellIndex(Vector2 meters)
     {
-        return new CellIndex((int)Mathf.Floor(worldPos.x / cellSize),
-            (int)Mathf.Floor(worldPos.y / cellSize));
+        return new CellIndex(
+            Mathf.FloorToInt(meters.x / cellSize),
+            Mathf.FloorToInt(meters.y / cellSize)
+        );
     }
+
 
     /// <summary>
     /// Inserts an endpoint into a cells bucket
@@ -125,6 +128,8 @@ public class FeatureGrid
             // This is where if the two roads should be connected, connect them here
             if(dist <= snapTolerance)
             {
+                ep.backendRef.adjList.Add(otherEp.backendRef);
+                otherEp.backendRef.adjList.Add(ep.backendRef);
                 ep.merged = true;
                 otherEp.merged = true;
             }
@@ -141,7 +146,7 @@ public class FeatureGrid
             foreach (FeatureGridNode node in rd.backendNodes)
             {
                 Endpoint ep = new Endpoint();
-                ep.position = node.latLong;   
+                ep.position = node.meters;   
                 ep.vertexIndex = node.vertexIndex;
                 ep.roadName = rd.roadName;
                 ep.backendRef = node;
