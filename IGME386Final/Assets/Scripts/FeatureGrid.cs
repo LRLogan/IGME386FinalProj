@@ -146,6 +146,7 @@ public class FeatureGrid
                 ep.roadName = rd.roadName;
                 ep.backendRef = node;
 
+                Debug.Log("Building endpoint: " + ep.roadName);
                 allEndpoints.Add(ep);
                 InsertEndpoint(ep);
             }

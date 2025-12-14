@@ -193,10 +193,20 @@ public class RoadFeatureQuery : MonoBehaviour
 
     private void DrawLineString(JArray coords, Transform parent)
     {
+        // Checks for missing data
         if (coords == null || coords.Count < 2) return;
+
+        RoadData roadData = parent.GetComponent<RoadData>();
+        if (roadData == null)
+        {
+            Debug.LogError("RoadData missing on road parent!");
+            return;
+        }
 
         List<Vector3> unityPositions = new List<Vector3>(coords.Count);
         bool hasInvalid = false;
+        FeatureGridNode prevNode = null;
+        int vertexIndex = 0;
 
         foreach (JToken token in coords)
         {
@@ -207,12 +217,32 @@ public class RoadFeatureQuery : MonoBehaviour
                 continue;
             }
 
-            double x = pair[0].Value<double>();
-            double y = pair[1].Value<double>();
+            double lon = pair[0].Value<double>();
+            double lat = pair[1].Value<double>();
+
+            // Creating the feature gird node
+            FeatureGridNode node = new FeatureGridNode
+            {
+                latLong = new Vector2((float)lon, (float)lat),
+                vertexIndex = vertexIndex,
+                roadName = roadData.roadName,
+                id = roadData.backendNodes.Count
+            };
+
+            // Setting adjancey for lines in the same road
+            if (prevNode != null)
+            {
+                prevNode.adjList.Add(node);
+                node.adjList.Add(prevNode);
+            }
+
+            roadData.backendNodes.Add(node);
+            prevNode = node;
+            vertexIndex++;
 
             // Use 4326 geographic points for SDK to project properly
             ArcGISPoint gisPoint;
-            gisPoint = new ArcGISPoint(x, y, heightOffset, new ArcGISSpatialReference(4326));
+            gisPoint = new ArcGISPoint(lon, lat, heightOffset, new ArcGISSpatialReference(4326));
 
             Vector3 enginePos;
             try

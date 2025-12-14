@@ -7,7 +7,7 @@ public class FinalProjManager : MonoBehaviour
 {
     [SerializeField] private RoadFeatureQuery roadFeatureQuery;
     [SerializeField] private FeatureGrid roadGrid;
-    private List<RoadData> roads = new List<RoadData>();
+    private List<GameObject> roads = new List<GameObject>();
 
     // Start is called before the first frame update
     void Start()
@@ -32,16 +32,18 @@ public class FinalProjManager : MonoBehaviour
         // Same thing as above just without the comments
         StartCoroutine(roadFeatureQuery.QueryFeatureService(()=>
         {
-            /*
+            roads = roadFeatureQuery.lineArray;
             roadGrid = new FeatureGrid();
+            List<RoadData> allRoadData = new List<RoadData>();
 
-            foreach(GameObject roadGO in roadFeatureQuery.lineArray)
+            // Extracts only the data to send to the graph
+            foreach(GameObject roadGO in roads)
             {
-                RoadData roadData = roadGO.GetComponent<RoadData>();
+                allRoadData.Add(roadGO.GetComponent<RoadData>());
             }
 
-            roadGrid.BuildRoadGraph();
-            */
+            roadGrid.BuildRoadGraph(allRoadData);
+            
         }));
     }
 

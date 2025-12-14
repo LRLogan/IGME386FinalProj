@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class FeatureGridNode : MonoBehaviour
 {
-    public Vector2 latLong; // Geographic coords
+    public Vector2 latLong; // Geographic coords (deg)
+    public Vector2 meters; // Projected threshold used for connectivity
     public int vertexIndex; // Index in roads polyline
     public string roadName;
     public int id;

@@ -8,7 +8,7 @@ public class RoadData : MonoBehaviour
     public string roadName;
     public Dictionary<int, float> averageCount;
     public LineRenderer[] lines;
-    public List<FeatureGridNode> backendNodes;  
+    public List<FeatureGridNode> backendNodes = new List<FeatureGridNode>();  
 
     // Since multple line segments (roads) can be a part of one big road we will need each lat / long pair
     public float[] latitude, longitude;
