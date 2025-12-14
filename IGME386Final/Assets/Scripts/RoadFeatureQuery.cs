@@ -47,11 +47,9 @@ public class RoadFeatureQuery : MonoBehaviour
             Debug.LogWarning("roadMaterial not assigned — assign a visible Unlit/Color material.");
 
         lineArray = new List<GameObject>();
-
-        StartCoroutine(QueryFeatureService());
     }
 
-    public IEnumerator QueryFeatureService(/*Action onComplete,*/ /*TextMeshProUGUI progressDisplay*/)
+    public IEnumerator QueryFeatureService(Action onComplete /*TextMeshProUGUI progressDisplay*/)
     {
         string geometry;
         string outSR;
@@ -137,7 +135,7 @@ public class RoadFeatureQuery : MonoBehaviour
 
         Debug.Log($"Total features collected: {allFeatures.Count}");
         CreateRoadLines(new JArray(allFeatures));
-        //onComplete.Invoke();
+        onComplete.Invoke();
     }
 
 

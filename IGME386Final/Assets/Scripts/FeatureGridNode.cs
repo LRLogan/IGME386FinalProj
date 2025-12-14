@@ -10,7 +10,6 @@ public class FeatureGridNode : MonoBehaviour
     public int id;
     public List<FeatureGridNode> adjList = new List<FeatureGridNode>();
 
-
     // Start is called before the first frame update
     void Start()
     {
