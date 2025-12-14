@@ -47,7 +47,7 @@ public class FinalProjManager : MonoBehaviour
         }, loadingPannel.GetComponentInChildren<TextMeshProUGUI>()));
         */
 
-        loadingPannel.GetComponentInChildren<TextMeshProUGUI>();
+        loadingPannel = loadingPannel.GetComponentInChildren<TextMeshProUGUI>();
 
         // Same thing as above just without the comments
         StartCoroutine(roadFeatureQuery.QueryFeatureService(()=>
@@ -132,7 +132,7 @@ public class FinalProjManager : MonoBehaviour
                     UpdateVertex(s);
             }
 
-            // Delay before each iteration (requirement)
+            //Delay before each iteration (requirement)
             yield return new WaitForSeconds(iterationDelay);
         }
     }
@@ -206,7 +206,7 @@ public class FinalProjManager : MonoBehaviour
     //--------------Cost and grid queries--------------
     private float Cost(Vector3Int from, Vector3Int to)
     {
-        // TEMP weighted grid (dynamic)
+        //TEMP weighted grid (dynamic)
         //return roadFeatureQuery.GetTraversalCost(to);
         return 0;
     }
