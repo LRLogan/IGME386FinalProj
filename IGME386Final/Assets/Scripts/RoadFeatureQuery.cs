@@ -224,6 +224,7 @@ public class RoadFeatureQuery : MonoBehaviour
             FeatureGridNode node = new FeatureGridNode
             {
                 latLong = new Vector2((float)lon, (float)lat),
+                meters = LatLonToMeters(new Vector2((float)lon, (float)lat)),
                 vertexIndex = vertexIndex,
                 roadName = roadData.roadName,
                 id = roadData.backendNodes.Count
@@ -290,5 +291,23 @@ public class RoadFeatureQuery : MonoBehaviour
         lr.numCapVertices = 2;
         lr.receiveShadows = false;
         lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+    }
+
+    const float EarthRadiusMeters = 6378137f;
+
+    /// <summary>
+    /// Helper method to convert lat / long to meters
+    /// </summary>
+    /// <param name="latLon"></param>
+    /// <returns></returns>
+    public static Vector2 LatLonToMeters(Vector2 latLon)
+    {
+        float latRad = latLon.y * Mathf.Deg2Rad;
+        float lonRad = latLon.x * Mathf.Deg2Rad;
+
+        float x = EarthRadiusMeters * lonRad;
+        float y = EarthRadiusMeters * Mathf.Log(Mathf.Tan(Mathf.PI / 4f + latRad / 2f));
+
+        return new Vector2(x, y);
     }
 }
