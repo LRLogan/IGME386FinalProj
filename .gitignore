@@ -97,3 +97,7 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+IGME386Final/Packages/packages-lock.json
+IGME386Final/ProjectSettings/Packages/com.unity.testtools.codecoverage/Settings.json
+IGME386Final/ProjectSettings/ShaderGraphSettings.asset
+IGME386Final/Packages/manifest.json
