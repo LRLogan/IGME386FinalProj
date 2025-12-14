@@ -49,7 +49,7 @@ public class RoadFeatureQuery : MonoBehaviour
         lineArray = new List<GameObject>();
     }
 
-    public IEnumerator QueryFeatureService(Action onComplete /*TextMeshProUGUI progressDisplay*/)
+    public IEnumerator QueryFeatureService(Action onComplete, TextMeshProUGUI progressDisplay)
     {
         string geometry;
         string outSR;
@@ -76,8 +76,8 @@ public class RoadFeatureQuery : MonoBehaviour
                 $"&resultOffset={resultOffset}" +
                 $"&resultRecordCount={maxRecordCount}";
 
-            //progressDisplay.text = "Traffic visualizer simulation now loading: \nFetching road data. This will take a moment." +
-            //    $"\nRequesting records {resultOffset}–{resultOffset + maxRecordCount}";
+            progressDisplay.text = "Traffic visualizer simulation now loading: \nFetching road data. This will take a moment." +
+                $"\nRequesting records {resultOffset}–{resultOffset + maxRecordCount}";
             Debug.Log($"Requesting records {resultOffset}–{resultOffset + maxRecordCount}");
 
             // In the end this code gets the data in geoJSON format while catching exceptions

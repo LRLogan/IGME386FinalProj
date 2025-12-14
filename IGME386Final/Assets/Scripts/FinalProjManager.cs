@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class FinalProjManager : MonoBehaviour
 {
+    [SerializeField] private TextMeshProUGUI loadingPannel;
+
     [SerializeField] private RoadFeatureQuery roadFeatureQuery;
     [SerializeField] private FeatureGrid roadGrid;
     private List<GameObject> roads = new List<GameObject>();
@@ -45,6 +47,8 @@ public class FinalProjManager : MonoBehaviour
         }, loadingPannel.GetComponentInChildren<TextMeshProUGUI>()));
         */
 
+        loadingPannel.GetComponentInChildren<TextMeshProUGUI>();
+
         // Same thing as above just without the comments
         StartCoroutine(roadFeatureQuery.QueryFeatureService(()=>
         {
@@ -60,7 +64,7 @@ public class FinalProjManager : MonoBehaviour
 
             roadGrid.BuildRoadGraph(allRoadData);
             
-        }));
+        }, loadingPannel));
     }
 
 
