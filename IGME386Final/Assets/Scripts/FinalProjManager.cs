@@ -9,6 +9,7 @@ public class FinalProjManager : MonoBehaviour
 
     [SerializeField] private RoadFeatureQuery roadFeatureQuery;
     [SerializeField] private FeatureGrid roadGrid;
+    [SerializeField] private FeatureGridNode roadGridNode;
     private List<GameObject> roads = new List<GameObject>();
 
 
@@ -17,18 +18,15 @@ public class FinalProjManager : MonoBehaviour
 
     //[SerializeField] private Vector3Int startNode;
     //[SerializeField] private Vector3Int goalNode;
-    private Vector3Int startNode;
-    private Vector3Int goalNode;
+    private FeatureGridNode startNode;
+    private FeatureGridNode goalNode;
 
-
-    private Dictionary<Vector3Int, float> g;
-    private Dictionary<Vector3Int, float> rhs;
-
-    private float km;
-    private Vector3Int lastStart;
-    List<Vector3Int> open;
-    Dictionary<Vector3Int, Vector2> keys;
-
+    Dictionary<FeatureGridNode, float> g;
+    Dictionary<FeatureGridNode, float> rhs;
+    List<FeatureGridNode> open;
+    Dictionary<FeatureGridNode, Vector2> keys;
+    private float km; 
+    private FeatureGridNode lastStart;
 
     // Start is called before the first frame update
     void Start()
@@ -41,6 +39,7 @@ public class FinalProjManager : MonoBehaviour
     /// </summary>
     private void StartSimulation()
     {
+        //bool roadsDone = false;
         /*
          * Leving this here for now if we decide to use it
         StartCoroutine(roadFeatureQuery.QueryFeatureService(() =>
@@ -66,8 +65,27 @@ public class FinalProjManager : MonoBehaviour
             }
 
             roadGrid.BuildRoadGraph(allRoadData);
-            
+
+            //roadsDone = true;
+            List<FeatureGridNode> nodes = roadGrid.GetAllNodes();
+
+            startNode = nodes[0];                     // example
+            goalNode = nodes[nodes.Count - 1];        // example
+
+            DStar();
+
         }, loadingPannel));
+
+        //while (!roadsDone)
+        //    yield return null;
+
+        //List<FeatureGridNode> nodes = roadGrid.GetAllNodes();
+        //
+        //startNode = nodes[0];                     // example
+        //goalNode = nodes[nodes.Count - 1];        // example
+        //
+        //DStar();
+
 
 
     }
@@ -84,14 +102,15 @@ public class FinalProjManager : MonoBehaviour
 
     public void DStar()
     {
+        Debug.Log("DSTARING ALL OVER THE PLACE");
         //Delay before each iteration        
         //Make sure the algo accurately finds the path on a temp weighted grid that also is able to change 
 
-        g = new Dictionary<Vector3Int, float>();
-        rhs = new Dictionary<Vector3Int, float>();
+        g = new Dictionary<FeatureGridNode, float>();
+        rhs = new Dictionary<FeatureGridNode, float>();
 
-        open = new List<Vector3Int>();
-        keys = new Dictionary<Vector3Int, Vector2>();
+        open = new List<FeatureGridNode>();
+        keys = new Dictionary<FeatureGridNode, Vector2>();
 
         km = 0f;
         lastStart = startNode;
@@ -112,9 +131,14 @@ public class FinalProjManager : MonoBehaviour
               (KeyLess(TopKey(), CalculateKey(startNode)) ||
                !Mathf.Approximately(GetG(startNode), GetRHS(startNode))))
         {
-            Vector3Int u = PopMin();
-            Vector2 kOld = keys[u];
+
+            FeatureGridNode u = PopMin(out Vector2 kOld);
             Vector2 kNew = CalculateKey(u);
+
+            //Vector2 kOld = keys[u];
+            //Vector2 kNew = CalculateKey(u);
+
+
 
             if (KeyLess(kOld, kNew))
             {
@@ -125,7 +149,7 @@ public class FinalProjManager : MonoBehaviour
             {
                 g[u] = GetRHS(u);
 
-                foreach (Vector3Int s in GetPredecessors(u))
+                foreach (FeatureGridNode s in GetPredecessors(u))
                     UpdateVertex(s);
             }
             else
@@ -133,7 +157,7 @@ public class FinalProjManager : MonoBehaviour
                 g[u] = Mathf.Infinity;
                 UpdateVertex(u);
 
-                foreach (Vector3Int s in GetPredecessors(u))
+                foreach (FeatureGridNode s in GetPredecessors(u))
                     UpdateVertex(s);
             }
 
@@ -142,13 +166,13 @@ public class FinalProjManager : MonoBehaviour
         }
     }
 
-    private void UpdateVertex(Vector3Int u)
+    private void UpdateVertex(FeatureGridNode u)
     {
         if (u != goalNode)
         {
             float min = Mathf.Infinity;
 
-            foreach (Vector3Int s in GetSuccessors(u))
+            foreach (FeatureGridNode s in GetSuccessors(u))
             {
                 float c = Cost(u, s);
                 if (c < Mathf.Infinity)
@@ -168,12 +192,12 @@ public class FinalProjManager : MonoBehaviour
         }
     }
 
-    private Vector3Int PopMin()
+    private FeatureGridNode PopMin(out Vector2 kOld)
     {
-        Vector3Int best = open[0];
+        FeatureGridNode best = open[0];
         Vector2 bestKey = keys[best];
 
-        foreach (Vector3Int n in open)
+        foreach (FeatureGridNode n in open)
         {
             Vector2 k = keys[n];
             if (KeyLess(k, bestKey))
@@ -185,14 +209,17 @@ public class FinalProjManager : MonoBehaviour
 
         open.Remove(best);
         keys.Remove(best);
+
+        kOld = bestKey;
         return best;
     }
+
 
     private Vector2 TopKey()
     {
         Vector2 best = new Vector2(Mathf.Infinity, Mathf.Infinity);
 
-        foreach (Vector3Int n in open)
+        foreach (FeatureGridNode n in open)
         {
             Vector2 k = keys[n];
             if (KeyLess(k, best))
@@ -209,32 +236,24 @@ public class FinalProjManager : MonoBehaviour
 
 
     //--------------Cost and grid queries--------------
-    private float Cost(Vector3Int from, Vector3Int to)
+    private float Cost(FeatureGridNode from, FeatureGridNode to)
     {
-        //TEMP weighted grid (dynamic)
-        //return roadFeatureQuery.GetTraversalCost(to);
-        return 0;
+        return Vector2.Distance(from.meters, to.meters);
     }
 
-    private IEnumerable<Vector3Int> GetSuccessors(Vector3Int u)
+
+    private IEnumerable<FeatureGridNode> GetSuccessors(FeatureGridNode u)
     {
-        //return roadGrid.GetNeighbors(u);
-        //Temporary
-        List<Vector3Int> temp = new List<Vector3Int>();
-        return temp;
+        return u.adjList;
     }
 
-    private IEnumerable<Vector3Int> GetPredecessors(Vector3Int u)
+    private IEnumerable<FeatureGridNode> GetPredecessors(FeatureGridNode u)
     {
-        //return roadGrid.GetNeighbors(u);
-
-        //Temporary
-        List<Vector3Int> temp = new List<Vector3Int>();
-        return temp;
+        return u.adjList;
     }
 
     //--------------Keys and heuristics-----------------
-    private Vector2 CalculateKey(Vector3Int s)
+    private Vector2 CalculateKey(FeatureGridNode s)
     {
         float min = Mathf.Min(GetG(s), GetRHS(s));
         return new Vector2(
@@ -243,19 +262,19 @@ public class FinalProjManager : MonoBehaviour
         );
     }
 
-    private float Heuristic(Vector3Int a, Vector3Int b)
+    private float GetG(FeatureGridNode n)
     {
-        return Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y);
+        return g.TryGetValue(n, out float v) ? v : Mathf.Infinity;
     }
 
-    private float GetG(Vector3Int n)
+    private float GetRHS(FeatureGridNode n)
     {
-        return g.ContainsKey(n) ? g[n] : Mathf.Infinity;
+        return rhs.TryGetValue(n, out float v) ? v : Mathf.Infinity;
     }
 
-    private float GetRHS(Vector3Int n)
+    private float Heuristic(FeatureGridNode a, FeatureGridNode b)
     {
-        return rhs.ContainsKey(n) ? rhs[n] : Mathf.Infinity;
+        return Vector2.Distance(a.meters, b.meters);
     }
 
   

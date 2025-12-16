@@ -176,5 +176,21 @@ public class FeatureGrid
         allEndpoints.Add(ep);
     }
 
+    public List<FeatureGridNode> GetAllNodes()
+    {
+        HashSet<FeatureGridNode> nodes = new HashSet<FeatureGridNode>();
+
+        foreach (var bucket in grid.Values)
+        {
+            foreach (Endpoint ep in bucket)
+            {
+                nodes.Add(ep.backendRef);
+            }
+        }
+
+        return new List<FeatureGridNode>(nodes);
+    }
+
+
 
 }
