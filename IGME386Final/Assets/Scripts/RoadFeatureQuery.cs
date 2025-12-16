@@ -227,16 +227,23 @@ public class RoadFeatureQuery : MonoBehaviour
                 meters = LatLonToMeters(new Vector2((float)lon, (float)lat)),
                 vertexIndex = vertexIndex,
                 roadName = roadData.roadName,
-                id = roadData.backendNodes.Count,
-                ownerRoad = roadData
+                ownerRoad = roadData,
+                id = roadData.backendNodes.Count
             };
+
 
             // Setting adjancey for lines in the same road
             if (prevNode != null)
             {
+                Vector2 dir = (node.meters - prevNode.meters).normalized;
+
+                prevNode.direction = dir;
+                node.direction = -dir;
+
                 prevNode.adjList.Add(node);
                 node.adjList.Add(prevNode);
             }
+
 
             roadData.backendNodes.Add(node);
             prevNode = node;
@@ -267,6 +274,15 @@ public class RoadFeatureQuery : MonoBehaviour
 
             unityPositions.Add(enginePos);
         }
+
+        if (roadData.backendNodes.Count >= 2)
+        {
+            int last = roadData.backendNodes.Count - 1;
+            roadData.backendNodes[last].direction =
+                roadData.backendNodes[last].meters -
+                roadData.backendNodes[last - 1].meters;
+        }
+
 
         // Create line object and LineRenderer
         GameObject lineObj = new GameObject("RoadSegment");

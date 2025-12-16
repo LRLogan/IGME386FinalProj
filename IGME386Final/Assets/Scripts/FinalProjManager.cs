@@ -67,9 +67,15 @@ public class FinalProjManager : MonoBehaviour
             List<FeatureGridNode> nodes = roadGrid.GetAllNodes();
 
             startNode = roadsToData["Beaver St"].backendNodes[0];                     
-            goalNode = roadsToData["Water St"].backendNodes[0];        
+            goalNode = roadsToData["Water St"].backendNodes[0];
 
-            DStar();
+            //Debug.Log($"Start adj: {startNode.adjList.Count}, {startNode.adjList[0].roadName}, Goal adj: {goalNode.adjList.Count}, {goalNode.adjList[0].roadName}");
+
+            Debug.Log($"Total snapped nodes: {roadGrid.GetAllNodes().Count}");
+            Debug.Log($"Start adj: {startNode.adjList.Count}");
+            Debug.Log($"Goal adj: {goalNode.adjList.Count}");
+
+            //DStar();
 
             nodeWorldPositions = new Dictionary<FeatureGridNode, Vector3>();
 
@@ -247,6 +253,10 @@ public class FinalProjManager : MonoBehaviour
 
         List<FeatureGridNode> path = ExtractPath();
         Debug.Log($"Path length: {path.Count}");
+        foreach(FeatureGridNode node in path)
+        {
+            Debug.Log($"Road name: {node.roadName}");
+        }
         HighlightPath(path);
 
 
