@@ -8,7 +8,6 @@ public class Endpoint
     public Vector2 position; // Meters
     public string roadName;
     public int vertexIndex;
-    public bool merged;
 
     // Index / ref to graph node if needed
     public FeatureGridNode backendRef;
@@ -109,8 +108,6 @@ public class FeatureGrid
 
     private void ProcessEndpoint(Endpoint ep)
     {
-        if (ep.merged) return;
-
         List<Endpoint> neighbors = GetNearbyEndpoints(ep.position);
 
         Endpoint otherEp;
@@ -118,7 +115,7 @@ public class FeatureGrid
         {
             otherEp = neighbors[i];
             // No need to check the same ep or if it is merged
-            if (ReferenceEquals(ep, otherEp) || otherEp.merged)
+            if (ReferenceEquals(ep, otherEp))
             {
                 continue;
             }
@@ -130,8 +127,6 @@ public class FeatureGrid
             {
                 ep.backendRef.adjList.Add(otherEp.backendRef);
                 otherEp.backendRef.adjList.Add(ep.backendRef);
-                ep.merged = true;
-                otherEp.merged = true;
             }
         }
     }
@@ -143,19 +138,13 @@ public class FeatureGrid
         // Get all endpoints from roads then insert them
         foreach (RoadData rd in allRoads)
         {
-            foreach (FeatureGridNode node in rd.backendNodes)
-            {
-                Endpoint ep = new Endpoint();
-                ep.position = node.meters;   
-                ep.vertexIndex = node.vertexIndex;
-                ep.roadName = rd.roadName;
-                ep.backendRef = node;
+            if (rd.backendNodes.Count < 2)
+                continue;
 
-                Debug.Log("Building endpoint: " + ep.roadName);
-                allEndpoints.Add(ep);
-                InsertEndpoint(ep);
-            }
+            AddEndpoint(rd.backendNodes[0], rd, allEndpoints);
+            AddEndpoint(rd.backendNodes[^1], rd, allEndpoints);
         }
+
 
         // Process them for connections
         foreach (Endpoint ep in allEndpoints)
@@ -163,4 +152,29 @@ public class FeatureGrid
             ProcessEndpoint(ep);
         }
     }
+
+    /// <summary>
+    /// Helper method for adding in an endpoint to the graph
+    /// </summary>
+    /// <param name="node"></param>
+    /// <param name="rd"></param>
+    /// <param name="allEndpoints"></param>
+    private void AddEndpoint(
+    FeatureGridNode node,
+    RoadData rd,
+    List<Endpoint> allEndpoints)
+    {
+        Endpoint ep = new Endpoint
+        {
+            position = node.meters,
+            vertexIndex = node.vertexIndex,
+            roadName = rd.roadName,
+            backendRef = node
+        };
+
+        InsertEndpoint(ep);
+        allEndpoints.Add(ep);
+    }
+
+
 }
