@@ -15,8 +15,11 @@ public class FinalProjManager : MonoBehaviour
     //D*    
     [SerializeField] private float iterationDelay = 0.05f;
 
-    [SerializeField] private Vector3Int startNode;
-    [SerializeField] private Vector3Int goalNode;
+    //[SerializeField] private Vector3Int startNode;
+    //[SerializeField] private Vector3Int goalNode;
+    private Vector3Int startNode;
+    private Vector3Int goalNode;
+
 
     private Dictionary<Vector3Int, float> g;
     private Dictionary<Vector3Int, float> rhs;
@@ -65,6 +68,8 @@ public class FinalProjManager : MonoBehaviour
             roadGrid.BuildRoadGraph(allRoadData);
             
         }, loadingPannel));
+
+
     }
 
 
@@ -132,7 +137,7 @@ public class FinalProjManager : MonoBehaviour
                     UpdateVertex(s);
             }
 
-            //Delay before each iteration (requirement)
+            //delay before each iteration
             yield return new WaitForSeconds(iterationDelay);
         }
     }
@@ -252,4 +257,7 @@ public class FinalProjManager : MonoBehaviour
     {
         return rhs.ContainsKey(n) ? rhs[n] : Mathf.Infinity;
     }
+
+  
+
 }
