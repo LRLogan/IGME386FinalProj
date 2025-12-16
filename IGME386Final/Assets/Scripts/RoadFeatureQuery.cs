@@ -227,7 +227,8 @@ public class RoadFeatureQuery : MonoBehaviour
                 meters = LatLonToMeters(new Vector2((float)lon, (float)lat)),
                 vertexIndex = vertexIndex,
                 roadName = roadData.roadName,
-                id = roadData.backendNodes.Count
+                id = roadData.backendNodes.Count,
+                ownerRoad = roadData
             };
 
             // Setting adjancey for lines in the same road

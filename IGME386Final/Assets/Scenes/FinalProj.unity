@@ -148,11 +148,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 729e7c7fb34e30b4b930b99bab352a46, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  loadingPannel: {fileID: 0}
+  loadingPannel: {fileID: 1031343990}
   roadFeatureQuery: {fileID: 1012773148}
+  pathMaterial: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  pathWidth: 4
   iterationDelay: 0.05
-  startNode: {x: 0, y: 0, z: 0}
-  goalNode: {x: 0, y: 0, z: 0}
 --- !u!4 &118927139
 Transform:
   m_ObjectHideFlags: 0

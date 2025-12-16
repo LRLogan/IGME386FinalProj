@@ -45,16 +45,6 @@ public class FinalProjManager : MonoBehaviour
     /// </summary>
     private void StartSimulation()
     {
-        //bool roadsDone = false;
-        /*
-         * Leving this here for now if we decide to use it
-        StartCoroutine(roadFeatureQuery.QueryFeatureService(() =>
-        {
-            lineArray = lineBuilder.lineArray;
-            AssignStartingData();
-        }, loadingPannel.GetComponentInChildren<TextMeshProUGUI>()));
-        */
-
         loadingPannel = loadingPannel.GetComponentInChildren<TextMeshProUGUI>();
 
         // Same thing as above just without the comments
@@ -190,27 +180,6 @@ public class FinalProjManager : MonoBehaviour
         return path;
     }
 
-
-    private void DrawPath(List<FeatureGridNode> path)
-    {
-        if (path.Count < 2)
-            return;
-
-        GameObject pathObj = new GameObject("DStar_Path");
-        LineRenderer lr = pathObj.AddComponent<LineRenderer>();
-
-        lr.material = pathMaterial;
-        lr.widthMultiplier = pathWidth;
-        lr.positionCount = path.Count;
-        lr.useWorldSpace = true;
-        lr.numCapVertices = 6;
-
-        for (int i = 0; i < path.Count; i++)
-        {
-            lr.SetPosition(i, nodeWorldPositions[path[i]]);
-        }
-    }
-
     public void DStar()
     {
         Debug.Log("DSTARING ALL OVER THE PLACE");
@@ -277,7 +246,8 @@ public class FinalProjManager : MonoBehaviour
         }
 
         List<FeatureGridNode> path = ExtractPath();
-        DrawPath(path);
+        HighlightPath(path);
+
 
     }
 
@@ -322,7 +292,8 @@ public class FinalProjManager : MonoBehaviour
             }
         }
 
-        open.Remove(best);
+        if(open.Contains(best))
+            open.Remove(best);
         keys.Remove(best);
 
         kOld = bestKey;
@@ -392,6 +363,21 @@ public class FinalProjManager : MonoBehaviour
         return Vector2.Distance(a.meters, b.meters);
     }
 
-  
+    private void HighlightPath(List<FeatureGridNode> path)
+    {
+        HashSet<RoadData> roadsOnPath = new HashSet<RoadData>();
+
+        foreach (var node in path)
+        {
+            if (node.ownerRoad != null)
+                roadsOnPath.Add(node.ownerRoad);
+        }
+
+        foreach (var rd in roadsOnPath)
+        {
+            rd.UpdateCValAndGrad(500f); // force red
+        }
+    }
+
 
 }

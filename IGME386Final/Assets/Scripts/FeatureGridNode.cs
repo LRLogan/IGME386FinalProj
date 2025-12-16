@@ -10,5 +10,6 @@ public class FeatureGridNode
     public string roadName;
     public int id;
     public List<FeatureGridNode> adjList = new List<FeatureGridNode>();
+    public RoadData ownerRoad;
 
 }
