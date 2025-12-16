@@ -13,6 +13,12 @@ public class FinalProjManager : MonoBehaviour
     private List<GameObject> roads = new List<GameObject>();
 
 
+    private Dictionary<FeatureGridNode, Vector3> nodeWorldPositions;
+    [SerializeField] private Material pathMaterial;
+    [SerializeField] private float pathWidth = 4f;
+
+    private Dictionary<string, RoadData> roadsToData = new Dictionary<string, RoadData>();
+
     //D*    
     [SerializeField] private float iterationDelay = 0.05f;
 
@@ -59,9 +65,10 @@ public class FinalProjManager : MonoBehaviour
             List<RoadData> allRoadData = new List<RoadData>();
 
             // Extracts only the data to send to the graph
-            foreach(GameObject roadGO in roads)
+            foreach (GameObject roadGO in roads)
             {
                 allRoadData.Add(roadGO.GetComponent<RoadData>());
+                roadsToData[roadGO.name] = roadGO.GetComponent<RoadData>();
             }
 
             roadGrid.BuildRoadGraph(allRoadData);
@@ -69,10 +76,34 @@ public class FinalProjManager : MonoBehaviour
             //roadsDone = true;
             List<FeatureGridNode> nodes = roadGrid.GetAllNodes();
 
-            startNode = nodes[0];                     // example
-            goalNode = nodes[nodes.Count - 1];        // example
+            startNode = roadsToData["Beaver St"].backendNodes[0];                     
+            goalNode = roadsToData["Water St"].backendNodes[0];        
 
             DStar();
+
+            nodeWorldPositions = new Dictionary<FeatureGridNode, Vector3>();
+
+            foreach (GameObject roadGO in roads)
+            {
+                RoadData rd = roadGO.GetComponent<RoadData>();
+                if (rd == null) continue;
+
+                // Each RoadSegment child has a LineRenderer
+                foreach (Transform child in roadGO.transform)
+                {
+                    LineRenderer lr = child.GetComponent<LineRenderer>();
+                    if (lr == null) continue;
+
+                    int i = 0;
+                    foreach (FeatureGridNode n in rd.backendNodes)
+                    {
+                        if (i < lr.positionCount)
+                            nodeWorldPositions[n] = lr.GetPosition(i);
+                        i++;
+                    }
+                }
+            }
+
 
         }, loadingPannel));
 
@@ -99,6 +130,86 @@ public class FinalProjManager : MonoBehaviour
         
     }
 
+
+    private List<FeatureGridNode> ExtractPath()
+    {
+        List<FeatureGridNode> path = new List<FeatureGridNode>();
+
+        FeatureGridNode current = startNode;
+        path.Add(current);
+
+        // If even the start has infinite g, nothing is reachable
+        if (float.IsInfinity(GetG(startNode)))
+        {
+            Debug.LogWarning("Start node cannot reach any goal-related component.");
+            return path;
+        }
+
+        int safety = 0;
+
+        while (current != goalNode && safety < 10000)
+        {
+            FeatureGridNode best = null;
+            float bestScore = Mathf.Infinity;
+
+            foreach (FeatureGridNode s in GetSuccessors(current))
+            {
+                float c = Cost(current, s);
+                float gS = GetG(s);
+
+                if (float.IsInfinity(gS))
+                    continue;
+
+                float score = gS + c;
+
+                if (score < bestScore)
+                {
+                    bestScore = score;
+                    best = s;
+                }
+            }
+
+            // No improving successor, we are at the frontier of reachability
+            if (best == null)
+            {
+                Debug.LogWarning(
+                    "Goal unreachable. Path terminated at closest reachable node."
+                );
+                break;
+            }
+
+            // Prevent loops
+            if (path.Contains(best))
+                break;
+
+            current = best;
+            path.Add(current);
+            safety++;
+        }
+
+        return path;
+    }
+
+
+    private void DrawPath(List<FeatureGridNode> path)
+    {
+        if (path.Count < 2)
+            return;
+
+        GameObject pathObj = new GameObject("DStar_Path");
+        LineRenderer lr = pathObj.AddComponent<LineRenderer>();
+
+        lr.material = pathMaterial;
+        lr.widthMultiplier = pathWidth;
+        lr.positionCount = path.Count;
+        lr.useWorldSpace = true;
+        lr.numCapVertices = 6;
+
+        for (int i = 0; i < path.Count; i++)
+        {
+            lr.SetPosition(i, nodeWorldPositions[path[i]]);
+        }
+    }
 
     public void DStar()
     {
@@ -164,6 +275,10 @@ public class FinalProjManager : MonoBehaviour
             //delay before each iteration
             yield return new WaitForSeconds(iterationDelay);
         }
+
+        List<FeatureGridNode> path = ExtractPath();
+        DrawPath(path);
+
     }
 
     private void UpdateVertex(FeatureGridNode u)
