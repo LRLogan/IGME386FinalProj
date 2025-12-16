@@ -42,17 +42,28 @@ public struct CellIndex
 
 public class FeatureGrid
 {
+    private struct RoadSegment
+    {
+        public FeatureGridNode a;
+        public FeatureGridNode b;
+        public RoadData road;
+    }
+
+    Dictionary<CellIndex, List<RoadSegment>> segmentGrid;
+
     // The spatial hash grid itself
     Dictionary<CellIndex, List<Endpoint>> grid;
 
     float cellSize;         // adjust based on snapping tolerance
     float snapTolerance;    // endpoints closer than this will be merged
 
-    public FeatureGrid(float cellSize = 10.0f, float snapTolerance = 3.0f)
+    public FeatureGrid(float cellSize = 15.0f, float snapTolerance = 6.0f)
     {
         this.cellSize = cellSize;
         this.snapTolerance = snapTolerance;
         grid = new Dictionary<CellIndex, List<Endpoint>>();
+        segmentGrid = new Dictionary<CellIndex, List<RoadSegment>>();
+
     }
 
     /// <summary>
@@ -114,48 +125,102 @@ public class FeatureGrid
         for (int i = 0; i < neighbors.Count; i++)
         {
             otherEp = neighbors[i];
-            // No need to check the same ep or if it is merged
             if (ReferenceEquals(ep, otherEp))
-            {
                 continue;
-            }
 
-            float dist = UnityEngine.Vector2.Distance(ep.position, otherEp.position);
+            if (ep.backendRef.ownerRoad == otherEp.backendRef.ownerRoad)
+                continue;
 
-            // This is where if the two roads should be connected, connect them here
-            if(dist <= snapTolerance)
+            float dist = Vector2.Distance(ep.position, otherEp.position);
+
+            // Must be VERY close (tighten tolerance)
+            if (dist > 4f)
+                continue;
+
+
+            // Direction sanity check (prevents parallel roads)
+            Vector2 d1 = ep.backendRef.direction;
+            Vector2 d2 = otherEp.backendRef.direction;
+
+            if (Vector2.Dot(d1.normalized, d2.normalized) > 0.85f)
+                continue;
+
+            if (dist <= snapTolerance)
             {
                 ep.backendRef.adjList.Add(otherEp.backendRef);
                 otherEp.backendRef.adjList.Add(ep.backendRef);
             }
+
         }
     }
+
+    //public void BuildRoadGraph(List<RoadData> allRoads)
+    //{
+    //    List<Endpoint> allEndpoints = new List<Endpoint>();
+    //
+    //    // Get all endpoints from roads then insert them
+    //    //foreach (RoadData rd in allRoads)
+    //    //{
+    //    //    foreach (FeatureGridNode node in rd.backendNodes)
+    //    //    {
+    //    //        if (node.vertexIndex == 0 || node.vertexIndex == rd.backendNodes.Count - 1)
+    //    //        {
+    //    //            AddEndpoint(node, rd, allEndpoints);
+    //    //        }
+    //    //
+    //    //    }
+    //    //}
+    //    foreach (RoadData rd in allRoads)
+    //    {
+    //        int stride = 5; // adjust if needed
+    //
+    //        for (int i = 0; i < rd.backendNodes.Count; i += stride)
+    //        {
+    //            AddEndpoint(rd.backendNodes[i], rd, allEndpoints);
+    //        }
+    //
+    //        // Always include true endpoints
+    //        AddEndpoint(rd.backendNodes[0], rd, allEndpoints);
+    //        AddEndpoint(rd.backendNodes[^1], rd, allEndpoints);
+    //    }
+    //
+    //
+    //
+    //
+    //    // Process them for connections
+    //    foreach (Endpoint ep in allEndpoints)
+    //    {
+    //        ProcessEndpoint(ep);
+    //
+    //    }
+    //
+    //}
 
     public void BuildRoadGraph(List<RoadData> allRoads)
     {
         List<Endpoint> allEndpoints = new List<Endpoint>();
 
-        // Get all endpoints from roads then insert them
         foreach (RoadData rd in allRoads)
         {
             foreach (FeatureGridNode node in rd.backendNodes)
             {
-                if (node.vertexIndex == 0 || node.vertexIndex == rd.backendNodes.Count - 1)
-                {
-                    AddEndpoint(node, rd, allEndpoints);
-                }
-
+                AddEndpoint(node, rd, allEndpoints);
             }
         }
 
 
-
-        // Process them for connections
+        // Existing endpoint snapping
         foreach (Endpoint ep in allEndpoints)
         {
             ProcessEndpoint(ep);
         }
+
+        // >>> INSERTED FIX <<<
+        List<RoadSegment> segments = CollectSegments(allRoads);
+        ConnectIntersectingSegmentsSpatial();
+
     }
+
 
     /// <summary>
     /// Helper method for adding in an endpoint to the graph
@@ -195,6 +260,93 @@ public class FeatureGrid
         return new List<FeatureGridNode>(nodes);
     }
 
+    private bool SegmentsIntersect(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4)
+    {
+        float d1 = Direction(p3, p4, p1);
+        float d2 = Direction(p3, p4, p2);
+        float d3 = Direction(p1, p2, p3);
+        float d4 = Direction(p1, p2, p4);
+
+        if (((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) &&
+            ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0)))
+            return true;
+
+        return false;
+    }
+
+    private float Direction(Vector2 a, Vector2 b, Vector2 c)
+    {
+        return (c.x - a.x) * (b.y - a.y) - (c.y - a.y) * (b.x - a.x);
+    }
+
+    private List<RoadSegment> CollectSegments(List<RoadData> roads)
+    {
+        segmentGrid.Clear();
+        List<RoadSegment> segments = new List<RoadSegment>();
+
+        foreach (RoadData rd in roads)
+        {
+            for (int i = 0; i < rd.backendNodes.Count - 1; i++)
+            {
+                RoadSegment s = new RoadSegment
+                {
+                    a = rd.backendNodes[i],
+                    b = rd.backendNodes[i + 1],
+                    road = rd
+                };
+
+                segments.Add(s);
+                InsertSegment(s);
+            }
+        }
+
+        return segments;
+    }
+
+
+    private void ConnectIntersectingSegmentsSpatial()
+    {
+        foreach (var kvp in segmentGrid)
+        {
+            List<RoadSegment> bucket = kvp.Value;
+
+            for (int i = 0; i < bucket.Count; i++)
+            {
+                RoadSegment s1 = bucket[i];
+
+                for (int j = i + 1; j < bucket.Count; j++)
+                {
+                    RoadSegment s2 = bucket[j];
+
+                    if (s1.road == s2.road)
+                        continue;
+
+                    if (SegmentsIntersect(
+                        s1.a.meters, s1.b.meters,
+                        s2.a.meters, s2.b.meters))
+                    {
+                        s1.a.adjList.Add(s2.a);
+                        s2.a.adjList.Add(s1.a);
+                    }
+                }
+            }
+        }
+    }
+
+
+    private void InsertSegment(RoadSegment s)
+    {
+        Vector2 mid = (s.a.meters + s.b.meters) * 0.5f;
+        CellIndex cell = GetCellIndex(mid);
+
+        if (!segmentGrid.TryGetValue(cell, out var bucket))
+        {
+            bucket = new List<RoadSegment>();
+            segmentGrid[cell] = bucket;
+        }
+
+        bucket.Add(s);
+    }
 
 
 }
