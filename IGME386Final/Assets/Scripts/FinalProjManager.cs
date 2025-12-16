@@ -77,7 +77,7 @@ public class FinalProjManager : MonoBehaviour
     }
 
 
-    void DStar()
+    public void DStar()
     {
         //Delay before each iteration        
         //Make sure the algo accurately finds the path on a temp weighted grid that also is able to change 
