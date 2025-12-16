@@ -11,5 +11,6 @@ public class FeatureGridNode
     public int id;
     public List<FeatureGridNode> adjList = new List<FeatureGridNode>();
     public RoadData ownerRoad;
+    public Vector3 worldPos;
 
 }

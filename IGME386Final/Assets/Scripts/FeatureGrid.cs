@@ -138,12 +138,16 @@ public class FeatureGrid
         // Get all endpoints from roads then insert them
         foreach (RoadData rd in allRoads)
         {
-            if (rd.backendNodes.Count < 2)
-                continue;
+            foreach (FeatureGridNode node in rd.backendNodes)
+            {
+                if (node.vertexIndex == 0 || node.vertexIndex == rd.backendNodes.Count - 1)
+                {
+                    AddEndpoint(node, rd, allEndpoints);
+                }
 
-            AddEndpoint(rd.backendNodes[0], rd, allEndpoints);
-            AddEndpoint(rd.backendNodes[^1], rd, allEndpoints);
+            }
         }
+
 
 
         // Process them for connections

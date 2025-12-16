@@ -246,6 +246,7 @@ public class FinalProjManager : MonoBehaviour
         }
 
         List<FeatureGridNode> path = ExtractPath();
+        Debug.Log($"Path length: {path.Count}");
         HighlightPath(path);
 
 
@@ -377,6 +378,8 @@ public class FinalProjManager : MonoBehaviour
         {
             rd.UpdateCValAndGrad(500f); // force red
         }
+        Debug.Log($"Roads highlighted: {roadsOnPath.Count}");
+
     }
 
 

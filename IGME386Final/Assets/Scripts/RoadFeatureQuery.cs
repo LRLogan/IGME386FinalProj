@@ -250,6 +250,8 @@ public class RoadFeatureQuery : MonoBehaviour
             try
             {
                 enginePos = mapComponent.GeographicToEngine(gisPoint);
+                node.worldPos = enginePos;
+
                 if (float.IsNaN(enginePos.x) || float.IsNaN(enginePos.y) || float.IsNaN(enginePos.z) ||
                     float.IsInfinity(enginePos.x) || float.IsInfinity(enginePos.y))
                 {

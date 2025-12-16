@@ -13,6 +13,11 @@ public class RoadData : MonoBehaviour
     // Since multple line segments (roads) can be a part of one big road we will need each lat / long pair
     public float[] latitude, longitude;
 
+    private void Awake()
+    {
+        
+    }
+
     private void Start()
     {
         if (averageCount == null)
@@ -21,8 +26,6 @@ public class RoadData : MonoBehaviour
             for (int i = 1; i <= 24; i++)
                 averageCount[i] = 0;
         }
-
-        lines = GetComponentsInChildren<LineRenderer>();
     }
 
     /// <summary>
